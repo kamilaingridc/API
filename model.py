@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class Pokemons (BaseModel):
     id: Optional[int] = None
-    titulo: str
-    aulas: int
-    horas: int
+    nome: str
+    elemento: str
+    altura: int
     

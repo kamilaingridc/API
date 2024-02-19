@@ -1,7 +1,8 @@
 # importa bibliotecas
 from fastapi import FastAPI  
 from model import Pokemons
-from fastapi import HTTPException
+from fastapi import HTTPException, status, Response
+from typing import Optional
 
 app = FastAPI()  # instancia a biblioteca
 
@@ -34,13 +35,38 @@ async def get_pokemon(pokemon_id: int):
     return pokemons[pokemon_id]
 
 # POST 
-@app.post('/pokemon')
-async def post_pokemon(pokemon: Pokemons):
-    if pokemon.id not in pokemons:
-        pokemons[pokemon.id] = pokemon
+@app.post('/pokemon', status_code=status.HTTP_201_CREATED)
+async def post_pokemon(pokemon: Optional[Pokemons] = None):  # 
+    if pokemon.id not in pokemon:
+        next_id = len(pokemons) + 1
+        pokemons[next_id] = pokemon
+        del pokemon.id
+        return pokemon
+    
+    else: 
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Já existe um pokemon com esse id')
+
+# atualiza    
+@app.put('/pokemon/{pokemon_id}',)
+async def put_pokemon(pokemon_id: int, pokemon: Pokemons):
+    if pokemon_id in pokemons:
+        pokemons[pokemon_id] = pokemon
+        pokemon.id = pokemon_id
+        del pokemon.id      # atualiza os dados 
         return pokemon
     else:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Já existe um pokemon com esse id.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Não existe pokemon com id {pokemon_id}')
+    
+# delete
+@app.delete('/pokemon/{pokemon_id}')
+async def delete_pokemon(pokemon_id: int):
+    if pokemon_id in pokemons:
+        del pokemons[pokemon_id]
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Não existe pokemon com id {pokemon_id}')
+
 
 # roda o servidor
 if __name__ == '__main__':

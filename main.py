@@ -1,10 +1,19 @@
 # importa bibliotecas
 from fastapi import FastAPI  
 from model import Pokemons
-from fastapi import HTTPException, status, Response
-from typing import Optional
+from fastapi import HTTPException, status, Response, Path, Header, Depends
+from typing import Optional, Any, List
+from time import sleep
 
-app = FastAPI()  # instancia a biblioteca
+def fake_bd():
+    try:
+        print("Abrindo o banco de dados.")
+        sleep(1)
+    finally:
+        print("Fechando o banco de dados.")
+        sleep(1)
+
+app = FastAPI(title='API das aulas da ETS', version='0.0.1', description="Estudos de API com Pokemon Wilson.")  # instancia a biblioteca
 
 pokemons = {
     1: {
@@ -23,13 +32,13 @@ pokemons = {
 async def raiz():  # função assíncrona
     return{"Mensagem": 'Deu certo :P'}  # retorna mensagem
 
-@app.get("/pokemon")
-async def get_pokemons(): # retorna todos os pokemons 
+@app.get("/pokemon", description='retorna um alista de pokemns cadastrados ou uma lista vazia.', response_model=List[Pokemons])
+async def get_pokemons(db: Any = Depends(fake_bd)): # retorna todos os pokemons 
     return pokemons
 
 
 @app.get('/pokemon/{pokemon_id}')
-async def get_pokemon(pokemon_id: int):
+async def get_pokemon(pokemon_id: int = Path(..., title='pegar o pokemon pelo id', gt=0, lt=3, description='selecionar pokemon pelo id onde o id deve ser 1 ou 2')):
     if pokemon_id not in pokemons:  # return a message for false id 
         raise HTTPException (status_code=404, detail="Pokemon não encontrado.")
     return pokemons[pokemon_id]
@@ -66,6 +75,50 @@ async def delete_pokemon(pokemon_id: int):
 
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Não existe pokemon com id {pokemon_id}')
+    
+#############################################
+@app.get('/calculadora/soma')
+async def calcular(n1:int, n2:int, n3:Optional[int]= None):
+    if n3 == None:
+        resultado = n1 + n2 
+        return {resultado}
+    else:
+        resultado = n1 + n2 + n3
+        return {resultado}
+    
+@app.get('/calculadora/subtracao')
+async def calcular(n1:int, n2:int, n3:Optional[int]= None):
+    if n3 == None:
+        resultado = n1 - n2 
+        return {resultado}
+    else:
+        resultado = n1 - n2 - n3
+        return {resultado}
+    
+@app.get('/calculadora/multiplicacao')
+async def calcular(n1:int, n2:int, n3:Optional[int]= None):
+    if n3 == None:
+        resultado = n1 * n2 
+        return {resultado}
+    else:
+        resultado = n1 * n2 * n3
+        return {resultado}
+    
+@app.get('/calculadora/divisao')
+async def calcular(n1:int, n2:int, n3:Optional[int]= None):
+    if n3 == None:
+        resultado = n1 / n2 
+        return {resultado}
+    else:
+        resultado = n1 / n2 / n3
+        return {resultado}
+#############################################
+
+#############################################
+@app.get('/headerEx')
+async def headerEx(wilson: str = Header(...)):
+    return {f'Wilson': (wilson)}
+#############################################
 
 
 # roda o servidor
